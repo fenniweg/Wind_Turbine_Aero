@@ -36,7 +36,7 @@ test = pd.read_fwf(os.path.join(data_path, 'bladedat.txt'), header=None)
 
 R = 89.17 #Rotor radius in meters
 n_blades = 3 #number of blades
-P_rated = 10e6 #rated power in watts
+P_rated = 10.64e6 #rated power in watts
 v_min = 4 #cut in wind speed
 v_max = 25 #cut out wind speed
 rho = 1.225 #air density in kg/m^3
@@ -61,6 +61,7 @@ v_5_ashes = v_5_ashes.to_numpy().flatten()
 v_9_ashes = v_9_ashes.to_numpy().flatten()
 v_11_ashes = v_11_ashes.to_numpy().flatten()
 v_20_ashes = v_20_ashes.to_numpy().flatten()
-r_ashes = r_ashes.to_numpy().flatten()
+r_ashes = r_ashes.to_numpy().flatten()  
 
 r_ashes = r_ashes/ 89.17 #normalize radius to rotor radius
+

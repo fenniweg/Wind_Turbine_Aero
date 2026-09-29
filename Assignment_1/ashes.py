@@ -19,7 +19,7 @@ from load_data import (
 )
 
 r_list = blade_dat['r'].values
-r_compare = r_list / R
+r_compare = r_list/R
 theta_opt = -0.11
 omega_max = 0.98
 cp_max = 0.47
@@ -39,10 +39,12 @@ for i, v in enumerate(v_compare):
     if v>= v_rated:
         omega_max = (optimum_lambda*v_rated)/R
     lambda_i = omega_max * R / v
+    #tip speed
+    tip_speed = omega_max * R
     rpm = omega_max * 60 / (2*np.pi)
     print('Computing loads for V_0 =', v, 'm/s')
     print('Rotor speed =', rpm, 'rpm')
-    print('Tip speed ratio =', lambda_i)
+    print('Tip speed  =', tip_speed, 'm/s')
     cp_target = P_rated / (0.5 * rho * A * v**3)
     # Feather: increase pitch angle above the optimal setting to reduce Cp.
     # Stall: decrease pitch angle below the optimal setting to reduce Cp.
