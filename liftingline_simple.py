@@ -1,7 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import bem
+
 
 
 
@@ -149,9 +149,9 @@ for n in range(1000):
         alpha_eff[k] = alpha_g -np.degrees( alpha_i[k] )# Effective angle of attack at the pivot point
 
         cl[k] = 0.11*alpha_eff[k]# Lift coefficient at the pivot point
-        R[k] = 0.5*rho*v_rel[k]**2 * cl[k] # Dynamic pressure at the pivot point
-        l = R[k] * np.cos(alpha_i[k]) # Lift per unit span at the pivot point
-        d[k] = np.tan(alpha_i[k]) * l # Induced drag per unit span at the pivot point
+        R[k] = 0.5*rho*v_rel[k]**2 * cl[k] # resulting lift vector
+        l[k] = R[k] * np.cos(alpha_i[k]) # Lift per unit span at the pivot point
+        d[k] = np.tan(alpha_i[k]) * l[k] # Induced drag per unit span at the pivot point
         
 
         gamma[k] = 0.5*cl[k] * v_rel[k] * chord  # Circulation at the pivot point
@@ -163,45 +163,50 @@ for n in range(1000):
     w_new = beta*w_star+(1-beta)*w # Relaxation of the induced wind at the pivot point
 
     #check for convergence
-    if n % 100 == 0:
-        print('Iteration', n, 'Max change in induced wind =', np.max(np.abs(w-w_new)))
 
     if (np.max(np.abs(w-w_new)))< 1e-6:
-        print('Converged after', n, 'iterations')
         break
     w = w_new
 
-#analytical solution for an elliptical circulation distribution
+#total lift and drag    , how much lift i slost due to 3d effects
+r_total = np.trapz(R, ypiv)
+lift_total = np.trapz(l, ypiv)
+lost_lift = r_total-lift_total
+drag_total = np.trapz(d, ypiv)
+
+print(f'Total lift: {lift_total:.2f} N, Total drag: {drag_total:.2f} N, Lost lift due to 3D effects: {lost_lift:.2f} N')
+
+
 #plot lift, induced drag, induced wind(downwash) and effective angle of attack distribution along the span of the wing
 #4 subplots
 
-# plt.figure(figsize=(12, 8))
-# plt.subplot(2, 2, 1)
-# plt.plot(ypiv, cl, 'b-', lw=2.5, label='Lift coefficient distribution')
-# plt.xlabel('Spanwise location $y$ [m]')
-# plt.ylabel('Lift coefficient $C_l$')
-# plt.title('Lift coefficient distribution along the span')
-# plt.grid(True, alpha=0.3)   
+plt.figure(figsize=(12, 8))
+plt.subplot(2, 2, 1)
+plt.plot(ypiv, l, 'b-', lw=2.5, label='Lift  distribution')
+plt.xlabel('Spanwise location $y$ [m]')
+plt.ylabel('Lift  $l$ [N/m]')
+plt.title('Lift along the span')
+plt.grid(True, alpha=0.3)   
 
-# plt.subplot(2, 2, 3)
-# plt.plot(ypiv, w, 'r-', lw=2.5, label='Induced wind (downwash) distribution')
-# plt.xlabel('Spanwise location $y$ [m]')
-# plt.ylabel('Induced wind $w$ [m/s]')
-# plt.title('Induced wind (downwash) distribution along the span')
-# plt.grid(True, alpha=0.3)   
+plt.subplot(2, 2, 3)
+plt.plot(ypiv, w, 'r-', lw=2.5, label='Induced wind (downwash) distribution')
+plt.xlabel('Spanwise location $y$ [m]')
+plt.ylabel('Induced wind $w$ [m/s]')
+plt.title('Induced wind (downwash) along the span')
+plt.grid(True, alpha=0.3)   
 
-# plt.subplot(2, 2, 4)
-# plt.plot(ypiv, alpha_eff, 'g-', lw=2.5, label='Effective angle of attack distribution')
-# plt.xlabel('Spanwise location $y$ [m]')
-# plt.ylabel('Effective angle of attack $\\alpha_{eff}$ [deg]')
-# plt.title('Effective angle of attack distribution along the span')
-# plt.grid(True, alpha=0.3)
+plt.subplot(2, 2, 4)
+plt.plot(ypiv, alpha_eff, 'g-', lw=2.5, label='Effective angle of attack distribution')
+plt.xlabel('Spanwise location $y$ [m]')
+plt.ylabel('Effective angle of attack $\\alpha_{eff}$ [deg]')
+plt.title('Effective angle of attack along the span')
+plt.grid(True, alpha=0.3)
 
-# plt.subplot(2, 2, 2)
-# plt.plot(ypiv,d , 'm-', lw=2.5, label=' induced drag')
-# plt.xlabel('Spanwise location $y$ [m]')
-# plt.ylabel('induced drag $d$ [N/m]')
-# plt.title('Induced drag distribution along the span')
-# plt.grid(True, alpha=0.3)   
+plt.subplot(2, 2, 2)
+plt.plot(ypiv,d , 'm-', lw=2.5, label=' induced drag')
+plt.xlabel('Spanwise location $y$ [m]')
+plt.ylabel('Drag distribution $d$ [N/m]')
+plt.title('Induced drag along the span')
+plt.grid(True, alpha=0.3)   
 
-# plt.show()  
+plt.show()  
