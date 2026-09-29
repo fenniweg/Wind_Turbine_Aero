@@ -7,17 +7,15 @@ The results are plotted to visualize the performance characteristics of the wind
 
 ### IMPORT LIBRARIES AND DATA ###
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+import os
 
-from bem import BEM_algorithm, solve_pitch
+import numpy as np
+
+from bem import BEM_algorithm, solve_bem, solve_pitch
 from load_data import A, P_rated, R, rho, theta_p, tip_speed_ratio, v_max, v_min
 
-####QUESTION 1: Compare the results of the two methods by plotting the power coefficient, Cp, as a function of the tip speed ratio, λ and pitch angles, θp.
-#Initialize arrays
 Cp = np.zeros((len(tip_speed_ratio), len(theta_p), 2)) #Initialize array to store Cp values for each method
-
+Ct = np.zeros((len(tip_speed_ratio), len(theta_p), 2)) #Initialize array to store Ct values for each method
 print("Starting BEM_algorithm computations for all combinations of tip speed ratios and pitch angles...")
 
 #Outer loop over methods, inner loop over tip speed ratios and pitch angles
@@ -27,8 +25,9 @@ for method in ['Polynomial','Madsen']:
 
     for s in tip_speed_ratio:
         for theta in theta_p:
-            Cp_value,_ = BEM_algorithm(s,theta,method) #Call BEM_algorithm function to compute Cp for combinaion 
+            Cp_value,Ct_value = BEM_algorithm(s,theta,method) #Call BEM_algorithm function to compute Cp for combinaion 
             Cp[np.where(tip_speed_ratio==s)[0][0], np.where(theta_p==theta)[0][0], 0 if method=='Polynomial' else 1] = Cp_value #Store Cp value in array for correct method
+            Ct[np.where(tip_speed_ratio==s)[0][0], np.where(theta_p==theta)[0][0], 0 if method=='Polynomial' else 1] = Ct_value #Store Ct value in array for correct method
     print(f"Completed BEM_algorithm for method: {method}")
 
 # Find the maximum Cp value and its corresponding tip speed ratio and pitch angle for each method
@@ -36,7 +35,7 @@ for method in ['Polynomial','Madsen']:
 optimum_index_polynomial = np.unravel_index(np.argmax(Cp[:,:,0]), Cp[:,:,0].shape)
 optimum_index_madsen = np.unravel_index(np.argmax(Cp[:,:,1]), Cp[:,:,1].shape)
 
-cp_max_polynomial = Cp[optimum_index_polynomial[0], optimum_index_polynomial[1], 0]
+cp_max_polynomial = Cp[optimum_index_polynomial[    0], optimum_index_polynomial[1], 0]
 cp_max_madsen = Cp[optimum_index_madsen[0], optimum_index_madsen[1], 1]
 
 optimum_lambda_polynomial = tip_speed_ratio[optimum_index_polynomial[0]]
@@ -46,12 +45,15 @@ optimum_lambda_madsen = tip_speed_ratio[optimum_index_madsen[0]]
 optimum_theta_madsen = theta_p[optimum_index_madsen[1]]
 print("Search for maximum Cp values completed.")    
 #results
-print(f"Polynomial Method: Cp_max = {cp_max_polynomial:.4f}, λ_max = {optimum_lambda_polynomial:.2f}, θp_max = {optimum_theta_polynomial:.2f}")
-print(f"Madsen Method: Cp_max = {cp_max_madsen:.4f}, λ_max = {optimum_lambda_madsen:.2f}, θp_max = {optimum_theta_madsen:.2f}") 
+print(f"Polynomial Method: Cp_max = {cp_max_polynomial:.4f}, λ_max = {optimum_lambda_polynomial:.2f}, θp_max = {optimum_theta_polynomial:.2f},Ct_max = {Ct[optimum_index_polynomial[0], optimum_index_polynomial[1], 0]:.4f}")
+print(f"Madsen Method: Cp_max = {cp_max_madsen:.4f}, λ_max = {optimum_lambda_madsen:.2f}, θp_max = {optimum_theta_madsen:.2f},Ct_max = {Ct[optimum_index_madsen[0], optimum_index_madsen[1], 1]:.4f}") 
 
 # Contour plot of Cp as a function of tip speed ratio and pitch angle for both methods
 THETA_GRID, LAMBDA_GRID = np.meshgrid(theta_p, tip_speed_ratio)
 
+#check if results directory exists, if not create it
+if not os.path.exists('results'):
+    os.makedirs('results')
 # Save all data needed for plotting in a separate script
 np.savez(
     'results/Cp_plotting_data.npz',
@@ -61,6 +63,8 @@ np.savez(
     LAMBDA_GRID=LAMBDA_GRID,
     Cp_polynomial=Cp[:, :, 0],
     Cp_madsen=Cp[:, :, 1],
+    Ct_polynomial=Ct[:, :, 0],
+    Ct_madsen=Ct[:, :, 1],
     cp_max_polynomial=cp_max_polynomial,
     cp_max_madsen=cp_max_madsen,
     optimum_lambda_polynomial=optimum_lambda_polynomial,
@@ -162,8 +166,8 @@ for i, v in enumerate(v_sweep):
     theta_p_sweep_stall[i] = theta_s
 
     #compute final Cp, Ct, T and P for feather and stall pitching
-    Cp_sweep_feather[i], Ct_sweep_feather[i] = BEM_algorithm(lambda_i, theta_f)
-    Cp_sweep_stall[i],Ct_sweep_stall[i] = BEM_algorithm(lambda_i, theta_s)
+    Cp_sweep_feather[i], Ct_sweep_feather[i] = solve_bem(lambda_i, theta_f)
+    Cp_sweep_stall[i],Ct_sweep_stall[i] = solve_bem(lambda_i, theta_s)
     P_sweep_feather[i] = 0.5*rho*A*Cp_sweep_feather[i]*v**3
     P_sweep_stall[i] = 0.5*rho*A*Cp_sweep_stall[i]*v**3
     T_sweep_feather[i] = Ct_sweep_feather[i]*0.5*rho*A*v**2
@@ -177,8 +181,9 @@ T_sweep_below_rated = np.zeros_like(v_sweep_below_rated)
 P_sweep_below_rated = np.zeros_like(v_sweep_below_rated)
 
 for i, v in enumerate(v_sweep_below_rated):
+    omega_max = (optimum_lambda*v)/R
     lambda_i = omega_max * R / v
-    Cp_sweep_below_rated[i], Ct_sweep_below_rated[i] = BEM_algorithm(lambda_i, optimum_theta)
+    Cp_sweep_below_rated[i], Ct_sweep_below_rated[i] = solve_bem(lambda_i, optimum_theta)
     P_sweep_below_rated[i] = 0.5*rho*A*Cp_sweep_below_rated[i]*v**3
     T_sweep_below_rated[i] = Ct_sweep_below_rated[i]*0.5*rho*A*v**2
 

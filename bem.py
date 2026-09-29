@@ -5,13 +5,13 @@ The functions include BEM_algorithm, double_interpolation, function_to_solve, an
 import numpy as np
 from scipy.optimize import brentq
 
-from load_data import V_0, A, R, airfoil_data, blade_dat, n_blades, rho, v_max, v_min
+from load_data import V_0, A, R, airfoil_data, blade_dat, n_blades, rho
 
 
 def double_interpolation(alpha,t_over_c):
     """Double interpolation to find C_l and C_d for a given angle of attack (alpha) and thickness/chord ratio (t_over_c)."""
-    C_l_thickness = np.zeros((6))
-    C_d_thickness = np.zeros((6))
+    C_l_thickness = np.zeros(6)
+    C_d_thickness = np.zeros(6)
     
     for k in range (6):
         C_l_thickness[k] = np.interp(alpha,airfoil_data[k][:,0],airfoil_data[k][:,1])
@@ -53,6 +53,110 @@ def solve_pitch(theta_p_low, theta_p_high, lambda_i, cp_target):
         return theta_p_high
 
     return brentq(function_to_solve, theta_p_low, theta_p_high, args=(lambda_i, cp_target))
+
+def solve_bem(lambda_tip, theta_p_deg, method='Polynomial', return_loads=False,V_0=V_0):
+    omega = lambda_tip * V_0 / R
+   #Load blade data
+    N_elem = len(blade_dat)
+    r_list = blade_dat['r'].values
+    chord_list = blade_dat['c'].values
+    beta_list = blade_dat['beta'].values
+    t_over_c_list = blade_dat['t/c'].values
+   
+    p_n_list = np.zeros(len(r_list))
+    p_t_list = np.zeros(len(r_list))
+    
+    # Loop over radial elements up to penultimate node to prevent Prandtl tip divergence (Assignment #1 tip)
+    for i in range(N_elem - 1): #parte dal primo elemento 2.8 e arriva al penultimo 88.45
+        r_i = r_list[i]
+        c_i = chord_list[i]
+        beta_i = beta_list[i]
+        tc_i = t_over_c_list[i]
+        
+        sigma_i = (c_i * n_blades) / (2 * np.pi * r_i)  # Solidity (Slide 15)
+        
+        # BEM Iteration Setup
+        a = 0.0
+        a_prime = 0.0
+        f_relax = 0.1
+        
+        for icount in range(1000):  # Safety iteration limit (Slide 5)
+            # Flow Angle phi
+            tan_phi = ((1.0 - a) * V_0) / ((1.0 + a_prime) * omega * r_i)
+            phi = np.arctan(tan_phi)
+            
+            # Local Angle of Attack alpha (Slide 13)
+            theta_loc = beta_i + theta_p_deg
+            alpha_deg = np.degrees(phi) - theta_loc
+            
+            # Double Interpolation for Lift and Drag
+            Cl, Cd = double_interpolation(alpha_deg,tc_i)
+            
+            # Load Coefficients Cn and Ct (Slide 15/16)
+            Cn = Cl * np.cos(phi) + Cd * np.sin(phi)
+            Ct = Cl * np.sin(phi) - Cd * np.cos(phi)
+            
+            # Prandtl Tip Loss Correction F (Slide 14)
+            sin_phi_abs = np.abs(np.sin(phi))
+            if sin_phi_abs < 1e-6:
+                F = 1.0
+            else:
+                exp_arg = -(n_blades/ 2.0) * (R - r_i) / (r_i * sin_phi_abs)
+                F = (2.0 / np.pi) * np.arccos(np.exp(exp_arg))
+            F = max(F, 1e-4)  # Avoid division by zero
+            
+            # Calculate CT local
+            dCT = ((1.0 - a)**2 * Cn * sigma_i) / (np.sin(phi)**2)
+            
+            # Axial Induction Update (Slide 1 & Assignment #1)
+            if method == 'Polynomial':  # Equation (1) Classical Glauert
+                if a <= 0.33:
+                    a_star = (sigma_i * Cn) / (4.0 * F * np.sin(phi)**2) * (1.0 - a)
+                else:
+                    a_star = dCT / (4.0 * F * (1.0 - 0.25 * (5.0 - 3.0 * a) * a))
+            else:  # Equation (2) Madsen et al.
+                CT_F = dCT / F
+                a_star = 0.246 * CT_F + 0.0586 * (CT_F**2) + 0.0883 * (CT_F**3)
+                
+            # Tangential Induction Update
+            a_prime_star = (sigma_i * Ct) / (4.0 * F * np.sin(phi) * np.cos(phi)) * (1.0 + a_prime)
+            
+            # Apply Underrelaxation (Slide 1)
+            a_new = f_relax * a_star + (1.0 - f_relax) * a
+            a_prime_new = f_relax * a_prime_star + (1.0 - f_relax) * a_prime
+            
+            # Convergence check
+            if abs(a_new - a) < 1e-6 and abs(a_prime_new - a_prime) < 1e-6:
+                a, a_prime = a_new, a_prime_new
+                break
+                
+            a, a_prime = a_new, a_prime_new
+            
+        # Element loads [N/m] (Slide 17)
+        Vrel = np.sqrt((V_0 * (1.0 - a))**2 + (omega * r_i * (1.0 + a_prime))**2)
+        p_n_list[i] = 0.5 * rho * (Vrel**2) * c_i * Cn
+        p_t_list[i] = 0.5 * rho * (Vrel**2) * c_i * Ct
+
+    # Force last element at the tip r=R to 0 N/m (Assignment #1 tip)
+    p_n_list[-1] = 0.0
+    p_t_list[-1] = 0.0
+
+    if return_loads == True:
+            return  p_n_list, p_t_list
+    
+    # Integrate loads across the blade span (Slide 18)
+    Thrust = n_blades * np.trapz(p_n_list, r_list)
+    Torque = n_blades * np.trapz(r_list * p_t_list, r_list)
+    Power = omega * Torque
+    
+    # Dimensionless Coefficients
+    A = np.pi * R**2
+    Cp = Power / (0.5 * rho * A * V_0**3)
+    CT = Thrust / (0.5 * rho * A * V_0**2)
+    
+    
+
+    return Cp, CT
 def BEM_algorithm (s,theta_p,method = 'Polynomial',return_loads = False,V_0 = V_0):
     '''
     BEM_algorithm computes the power coefficient (Cp) and thrust coefficient (CT) for a given tip speed ratio (s), 

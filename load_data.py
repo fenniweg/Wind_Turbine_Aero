@@ -43,3 +43,19 @@ tip_speed_ratio= np.linspace(5.0, 10.0, 15)      # Tip speed ratio range
 theta_p = np.linspace(-4.0, 3.0, 15)       # Pitch angle range [deg] 
 
 
+#import data from ashes
+v_5_ashes = pd.read_csv(r'data/ashes_5.txt',header = None,sep = None,engine='python')
+v_9_ashes = pd.read_csv(r'data/ashes_9.txt',header = None,sep = None,engine='python')
+v_11_ashes = pd.read_csv(r'data/ashes_11.txt',header = None,sep = None,engine='python')
+v_20_ashes = pd.read_csv(r'data/ashes_20.txt',header = None,sep = None,engine='python')
+r_ashes  = pd.read_csv(r'data/blade_ashes.txt',header = None,sep = None,engine='python')
+
+v_5_ashes = v_5_ashes.to_numpy().flatten()
+v_9_ashes = v_9_ashes.to_numpy().flatten()
+v_11_ashes = v_11_ashes.to_numpy().flatten()
+v_20_ashes = v_20_ashes.to_numpy().flatten()
+r_ashes = r_ashes.to_numpy().flatten()
+
+r_ashes = r_ashes/ 89.17 #normalize radius to rotor radius
+print(r_ashes.size)
+print(v_5_ashes.size)
