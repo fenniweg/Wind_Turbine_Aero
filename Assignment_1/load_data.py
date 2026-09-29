@@ -6,14 +6,17 @@ Data for the wind tubrine is defined here, including rotor radius, number of bla
 
 import numpy as np
 import pandas as pd
-import os 
+import  glob,os
 
-#global file path for data files
-data_path = os.path.join(os.getcwd(),'data')
+#lookup global file path for data folder
+data_path = glob.glob('**/data', recursive=True)[0]
+
 
 #Load blade data and name columns for easier access using the global data path
-blade_dat = pd.read_fwf(os.path.join(data_path, r'bladedat.txt'), header=None)
+blade_dat = pd.read_fwf(os.path.join(data_path, 'bladedat.txt'), header=None)
 blade_dat.columns =['r','c','beta','t/c']
+
+
 
 #load airfoil data and store in 3D array
 airfoil_data = np.zeros((6, 105,4))  # 6 airfoils,105 data points each,4 columns (alpha, C_l(alpha), C_d(alpha), C_m(alpha))
@@ -61,5 +64,3 @@ v_20_ashes = v_20_ashes.to_numpy().flatten()
 r_ashes = r_ashes.to_numpy().flatten()
 
 r_ashes = r_ashes/ 89.17 #normalize radius to rotor radius
-print(r_ashes.size)
-print(v_5_ashes.size)

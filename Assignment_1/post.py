@@ -5,15 +5,20 @@ The plots generated are:
 
 
 
+import glob
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from load_data import P_rated
 
+#find global path
+
+results_path = glob.glob('**/results', recursive=True)[0]
+
 #load npz files with results from main.py
-npzfile = np.load('results/Cp_plotting_data.npz')
+npzfile = np.load(os.path.join(results_path, 'Cp_plotting_data.npz'))
+
 theta_p = npzfile['theta_p']
 tip_speed_ratio = npzfile['tip_speed_ratio']
 THETA_GRID = npzfile['THETA_GRID']
@@ -29,13 +34,14 @@ optimum_theta_polynomial = npzfile['optimum_theta_polynomial']
 optimum_lambda_madsen = npzfile['optimum_lambda_madsen']
 optimum_theta_madsen = npzfile['optimum_theta_madsen']
 
-npzfile = np.load('results/sweep_plotting_data.npz')
+npzfile = np.load(os.path.join(results_path, 'sweep_plotting_data.npz'))
+
 v_sweep1 = npzfile['v_sweep']
 omega_sweep = npzfile['omega_sweep']
 P_sweep = npzfile['P_sweep']
 omega_max = npzfile['omega_max']
 
-npzfile = np.load('results/Q3_pitch_control_plotting_data.npz')
+npzfile = np.load(os.path.join(results_path, 'Q3_pitch_control_plotting_data.npz'))
 v_sweep = npzfile['v_sweep']
 theta_p_sweep_feather = npzfile['theta_p_sweep_feather']
 theta_p_sweep_stall = npzfile['theta_p_sweep_stall']

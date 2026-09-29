@@ -7,12 +7,18 @@ The results are plotted to visualize the performance characteristics of the wind
 
 ### IMPORT LIBRARIES AND DATA ###
 
-import os
+import os,glob
 
 import numpy as np
 
 from bem import BEM_algorithm, solve_bem, solve_pitch
 from load_data import A, P_rated, R, rho, theta_p, tip_speed_ratio, v_max, v_min
+
+#lookup global file path for results folder if exxistent otherwise create it
+#check if results directory exists, if not create it
+results_path = glob.glob('**/results', recursive=True)[0]
+
+
 
 Cp = np.zeros((len(tip_speed_ratio), len(theta_p), 2)) #Initialize array to store Cp values for each method
 Ct = np.zeros((len(tip_speed_ratio), len(theta_p), 2)) #Initialize array to store Ct values for each method
@@ -51,12 +57,9 @@ print(f"Madsen Method: Cp_max = {cp_max_madsen:.4f}, λ_max = {optimum_lambda_ma
 # Contour plot of Cp as a function of tip speed ratio and pitch angle for both methods
 THETA_GRID, LAMBDA_GRID = np.meshgrid(theta_p, tip_speed_ratio)
 
-#check if results directory exists, if not create it
-if not os.path.exists('results'):
-    os.makedirs('results')
-# Save all data needed for plotting in a separate script
-np.savez(
-    'results/Cp_plotting_data.npz',
+
+# Save all data needed for plotting in a separate script with global path name
+np.savez(os.path.join(results_path, 'Cp_plotting_data.npz'),
     theta_p=theta_p,
     tip_speed_ratio=tip_speed_ratio,
     THETA_GRID=THETA_GRID,
@@ -120,8 +123,7 @@ rpm_sweep = np.append(rpm_sweep, np.full(100, rpm_max)) #Omega is constant at om
 P_sweep = np.append(P_sweep, np.full(100, P_rated)) #Power is constant at rated power above rated wind speed
 omega_sweep = np.append(omega_sweep, np.full(100, omega_max)) #Omega is constant at omega_max above rated wind speed
 # Save sweep data for use in other scripts/plotting
-
-np.savez('results/sweep_plotting_data.npz',
+np.savez(os.path.join(results_path, 'sweep_plotting_data.npz'),
          v_sweep=v_sweep,
          omega_sweep=omega_sweep,
          P_sweep=P_sweep,
@@ -200,7 +202,7 @@ P_sweep_stall = np.concatenate((P_sweep_below_rated, P_sweep_stall))
 T_sweep_feather = np.concatenate((T_sweep_below_rated, T_sweep_feather))
 T_sweep_stall = np.concatenate((T_sweep_below_rated, T_sweep_stall))
 
-np.savez('results/Q3_pitch_control_plotting_data.npz',
+np.savez(os.path.join(results_path, 'Q3_pitch_control_plotting_data.npz'),
          v_sweep=v_sweep,
             theta_p_sweep_feather=theta_p_sweep_feather,
             theta_p_sweep_stall=theta_p_sweep_stall,
