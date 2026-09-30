@@ -43,7 +43,7 @@ rho = 1.225 #air density in kg/m^3
 
 A = np.pi*R**2 #rotor area in m^2
 
-V_0= 11.19
+V_rated= 11.19
 
 #Define range of tip speed ratios (lambda) and pitch angles (theta_p) to test
 tip_speed_ratio= np.linspace(5.0, 10.0, 15)      # Tip speed ratio range 

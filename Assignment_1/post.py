@@ -145,6 +145,7 @@ print('Plots for Q2 saved in Figures folder')
 # 4 seperate plots: 1) P vs V0, 2) theta_p vs V0, 3) T vs V0, 4) Cp and Ct vs V0 with each feather and stall pitch
 
 
+
 plt.figure(figsize=(10, 6))
 plt.plot(v_sweep, P_sweep_feather, 'b-', lw=2.8, label='Feather')
 plt.plot(v_sweep, P_sweep_stall, 'r--', lw=2.8, label='Stall')

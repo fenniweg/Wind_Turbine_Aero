@@ -20,41 +20,48 @@ from load_data import (
 
 r_list = blade_dat['r'].values
 r_compare = r_list/R
-theta_opt = -0.11
-omega_max = 0.98
-cp_max = 0.47
-v_rated = 11.19
-optimum_lambda = omega_max * R / v_rated
+theta_opt = 0.00
+omega_max = 1.01
+cp_max = 0.4661
+v_rated = 11.43
+optimum_lambda = 7.86
 
-v_compare = [5,9,11,20] #m/s, windpseeds to compare with ashe
-p_n_compare_feather = np.zeros((len(v_compare), len(r_list)))
-p_n_compare_stall = np.zeros((len(v_compare), len(r_list)))
-p_t_compare_stall = np.zeros((len(v_compare), len(r_list)))
-p_t_compare_feather = np.zeros((len(v_compare), len(r_list)))
+v_compare = [5,9,11,20] #m/s, windpseeds to compare with ashes
+p_n_compare = np.zeros((len(v_compare), len(r_list)))
+p_t_compare = np.zeros((len(v_compare), len(r_list)))
 p_n_ashes = [v_5_ashes[0:40], v_9_ashes[0:40], v_11_ashes[0:40], v_20_ashes[0:40]]
 p_t_ashes = [v_5_ashes[40:80], v_9_ashes[40:80], v_11_ashes[40:80], v_20_ashes[40:80]]
 
 for i, v in enumerate(v_compare):
-    omega_max = (optimum_lambda*v)/R
-    if v>= v_rated:
-        omega_max = (optimum_lambda*v_rated)/R
-    lambda_i = omega_max * R / v
-    #tip speed
-    tip_speed = omega_max * R
-    rpm = omega_max * 60 / (2*np.pi)
-    print('Computing loads for V_0 =', v, 'm/s')
-    print('Rotor speed =', rpm, 'rpm')
-    print('Tip speed  =', tip_speed, 'm/s')
-    cp_target = P_rated / (0.5 * rho * A * v**3)
-    # Feather: increase pitch angle above the optimal setting to reduce Cp.
-    # Stall: decrease pitch angle below the optimal setting to reduce Cp.
     if v >= v_rated:
-        theta_f = bem.solve_pitch(0, 40.0, lambda_i, cp_target)
+            #if wind speed is above rated, use rated omega to compute loads
+            omega_i = omega_max
+            lambda_i = omega_max * R / v
+            cp_target = P_rated / (0.5 * rho * A * v**3)
+            theta_i = bem.solve_pitch(0, 40.0, lambda_i, cp_target)
+            
     else:
-        theta_f = 0 #below rated wind speed, pitch angle is 0
-    #compute final Cp, Ct, T and P for feather and stall pitching
-    p_n_compare_feather[i,:],p_t_compare_feather[i,:]= bem.BEM_algorithm(lambda_i, theta_f,return_loads = True,V_0 = v)
-    print('Feather pitch angle =', theta_f, 'deg')
+         
+        omega_i = (optimum_lambda*v)/R
+        lambda_i = omega_i * R / v
+        theta_i = theta_opt #below rated wind speed, pitch angle is opt
+
+    print('Computing loads for V_0 =', v, 'm/s with theta_i =', theta_i, 'deg')
+
+    p_n_compare[i,:],p_t_compare[i,:]= bem.BEM_algorithm(lambda_i, theta_i,v,return_loads = True)
+    #tip speed
+    rpm = omega_i * 60 / (2*np.pi)
+    
+    print('Omega =', omega_i, 'rad/s')
+    print('Rotor speed =', rpm, 'rpm')
+    print('Tip speed ratio =', lambda_i)
+    print('Pitch angle =', theta_i, 'deg')
+    cp_i,_ = bem.BEM_algorithm(lambda_i, theta_i,v)
+    print('Cp =', cp_i)
+
+    
+    
+
     
 
 
@@ -63,7 +70,7 @@ for i, v in enumerate(v_compare):
 for i, v in enumerate(v_compare):
     fig,axs = plt.subplots(1,2,figsize=(12,5))
     ax_n, ax_t = axs
-    ax_n.plot(r_compare, p_n_compare_feather[i, :], 'b-', lw=2.5, label='Feather')
+    ax_n.plot(r_compare, p_n_compare[i, :], 'b-', lw=2.5, label='BEM Code')
     ax_n.plot(r_ashes, p_n_ashes[i], 'k--', lw=2.5, label='ASHES')
 
     ax_n.set_xlabel('Blade radius $r/R$')
@@ -71,7 +78,7 @@ for i, v in enumerate(v_compare):
     ax_n.set_title(f'Normal load at $V_0$ = {v} m/s')
     ax_n.grid(True, alpha=0.3)
 
-    ax_t.plot(r_compare, p_t_compare_feather[i, :], 'r--', lw=2.5, label='Feather')
+    ax_t.plot(r_compare, p_t_compare[i, :], 'r--', lw=2.5, label='BEM Code')
     
     ax_t.plot(r_ashes, p_t_ashes[i], 'k--', lw=2.5, label='ASHES')
     ax_t.set_xlabel('Blade radius $r/R$')
@@ -86,5 +93,8 @@ for i, v in enumerate(v_compare):
     fig.tight_layout()
     fig.savefig(rf'Figures\loads_{v}ms.pdf')
     plt.close(fig)
+
+
+print('Plots saved in Figures folder')
 
 
