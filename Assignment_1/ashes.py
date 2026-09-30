@@ -1,10 +1,9 @@
 ''' Use this file to call the BEM algorithm and compute the aerodynamics loads with your own BEM
 code for Vo=5, 9, 11, and 20 m/s. Try and explain the source of any differences you may
 see'''
+import bem
 import matplotlib.pyplot as plt
 import numpy as np
-
-import bem
 from load_data import (
     A,
     P_rated,
@@ -59,7 +58,7 @@ for i, v in enumerate(v_compare):
     cp_i,_ = bem.BEM_algorithm(lambda_i, theta_i,v)
     print('Cp =', cp_i)
 
-    
+
     
 
     

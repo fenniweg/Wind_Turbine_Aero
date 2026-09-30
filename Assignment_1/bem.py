@@ -3,10 +3,8 @@ The functions include BEM_algorithm, double_interpolation, function_to_solve, an
 '''
 
 import numpy as np
+from load_data import A, R, V_rated, airfoil_data, blade_dat, n_blades, rho
 from scipy.optimize import brentq
-
-from load_data import V_rated, A, R, airfoil_data, blade_dat, n_blades, rho
-
 
 omega_max = 1.01
 

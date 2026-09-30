@@ -4,9 +4,11 @@ The data is used in subsequent modules for calculations related to the performan
 Data for the wind tubrine is defined here, including rotor radius, number of blades, rated power, cut-in and cut-out wind speeds, and air density.
 '''
 
+import glob
+import os
+
 import numpy as np
 import pandas as pd
-import  glob,os
 
 #lookup global file path for data folder
 data_path = glob.glob('**/data', recursive=True)[0]

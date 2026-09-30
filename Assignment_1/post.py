@@ -15,6 +15,7 @@ from load_data import P_rated
 #find global path
 
 results_path = glob.glob('**/results', recursive=True)[0]
+figures_path = glob.glob('**/Figures', recursive=True)[0]
 
 #load npz files with results from main.py
 npzfile = np.load(os.path.join(results_path, 'Cp_plotting_data.npz'))
@@ -97,7 +98,8 @@ plt.rcParams.update({'font.size': 13})
 plt.tight_layout()
 if not os.path.exists('Figures'):
     os.makedirs('Figures')
-fig.savefig('Figures/Cp_contour_comparison_raster.pdf', dpi=300)
+fig.savefig(os.path.join(figures_path,'Cp_contour_comparison_raster.pdf'), dpi=300)
+
 
 'Q2: Plot omega and P vs wind speed up to max speed'
 # Plot 1, omega vs wind speed from cut-in to max speed
@@ -117,7 +119,8 @@ plt.ylabel('Rotational Speed [rad/s]', fontsize=13)
 plt.grid(True, linestyle=':', alpha=0.7, linewidth=1.0)
 plt.legend(fontsize=13)
 plt.tight_layout()
-plt.savefig('Figures/omega_vs_wind_speed.pdf', dpi=300, format='pdf', bbox_inches='tight')
+plt.savefig(os.path.join(figures_path,'omega_vs_wind_speed.pdf'), dpi=300,format='pdf', bbox_inches='tight')
+
 
 
 # # Plot power against wind speed from cut-in to max speed
@@ -156,7 +159,8 @@ plt.title('Power regulation by pitching', fontsize=12)
 plt.legend(fontsize=13)
 plt.tight_layout()
 plt.grid(True, alpha=0.3)
-plt.savefig('Figures/Q3_power_control.pdf', dpi=300, format='pdf', bbox_inches='tight')
+plt.savefig(os.path.join(figures_path,'Q3_power_control.pdf'), dpi=300,format='pdf', bbox_inches='tight')
+
 
 plt.figure(figsize=(10, 6))
 plt.plot(v_sweep, theta_p_sweep_feather, 'b-', lw=2.8, label='Feather')
@@ -167,7 +171,8 @@ plt.title(r'Pitch angle required for rated power at $\omega_{max}$', fontsize=12
 plt.legend(fontsize=13)
 plt.tight_layout()
 plt.grid(True, alpha=0.3)
-plt.savefig('Figures/Q3_pitch_angle.pdf', dpi=300, format='pdf', bbox_inches='tight')
+plt.savefig(os.path.join(figures_path,'Q3_pitch_angle.pdf'), dpi=300,format='pdf', bbox_inches='tight')
+
 
 plt.figure(figsize=(10, 6))
 plt.plot(v_sweep, T_sweep_feather, 'b-', lw=2.8, label='Feather')
@@ -178,7 +183,8 @@ plt.title('Thrust at rated-speed power limit', fontsize=12)
 plt.legend(fontsize=13)
 plt.tight_layout()
 plt.grid(True, alpha=0.3)
-plt.savefig('Figures/Q3_thrust.pdf', dpi=300, format='pdf', bbox_inches='tight')
+plt.savefig(os.path.join(figures_path,'Q3_thrust.pdf'), dpi=300,format='pdf', bbox_inches='tight')
+
 
 plt.figure(figsize=(10, 6))
 plt.plot(v_sweep, Cp_sweep_feather, 'b-', lw=2.8, label=r'$C_p$ feather')
@@ -191,5 +197,8 @@ plt.title('Dimensionless coefficients for each pitch strategy', fontsize=12)
 plt.legend(fontsize=13)
 plt.tight_layout()
 plt.grid(True, alpha=0.3)
-plt.savefig('Figures/Q3_coefficients.pdf', dpi=300, format='pdf', bbox_inches='tight')
+
+plt.savefig(os.path.join(figures_path,'Q3_coefficients.pdf'), dpi=300,format='pdf', bbox_inches='tight')
 print("Plots for Q3 saved in Figures folder")
+
+
