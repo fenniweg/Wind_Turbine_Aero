@@ -4,6 +4,8 @@ see'''
 import bem
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import glob
 from load_data import (
     A,
     P_rated,
@@ -17,6 +19,10 @@ from load_data import (
     v_20_ashes,
 )
 
+if not os.path.exists('Figures'):
+    os.makedirs('Figures')
+
+Figures_path = glob.glob('**/Figures', recursive=True)[0]
 r_list = blade_dat['r'].values
 r_compare = r_list/R
 theta_opt = 0.00
@@ -45,24 +51,9 @@ for i, v in enumerate(v_compare):
         lambda_i = omega_i * R / v
         theta_i = theta_opt #below rated wind speed, pitch angle is opt
 
-    print('Computing loads for V_0 =', v, 'm/s with theta_i =', theta_i, 'deg')
+   
 
     p_n_compare[i,:],p_t_compare[i,:]= bem.BEM_algorithm(lambda_i, theta_i,v,return_loads = True)
-    #tip speed
-    rpm = omega_i * 60 / (2*np.pi)
-    
-    print('Omega =', omega_i, 'rad/s')
-    print('Rotor speed =', rpm, 'rpm')
-    print('Tip speed ratio =', lambda_i)
-    print('Pitch angle =', theta_i, 'deg')
-    cp_i,_ = bem.BEM_algorithm(lambda_i, theta_i,v)
-    print('Cp =', cp_i)
-
-
-    
-
-    
-
 
 
 # Separate plots for normal and tangential loads at each wind speed and compare with ashes data and save as pdf

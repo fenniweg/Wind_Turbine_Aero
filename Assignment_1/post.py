@@ -13,6 +13,8 @@ import numpy as np
 from load_data import P_rated
 
 #find global path
+if not os.path.exists('Figures'):
+    os.makedirs('Figures')
 
 results_path = glob.glob('**/results', recursive=True)[0]
 figures_path = glob.glob('**/Figures', recursive=True)[0]
@@ -68,21 +70,21 @@ for row, (method, cp_data, ct_data, theta_opt, lambda_opt) in enumerate([
      optimum_theta_polynomial, optimum_lambda_polynomial),
 ]):
     for ax, data, coefficient,cmap_c in [
-        (axs[row, 0], cp_data, 'C_p','plasma'),
-        (axs[row, 1], ct_data, 'C_t','viridis'),
+        (axs[row, 0], cp_data, 'C_P','plasma'),
+        (axs[row, 1], ct_data, 'C_T','viridis'),
     ]:
         
         contour = ax.contourf(THETA_GRID, LAMBDA_GRID, data, levels=20,
                               cmap=cmap_c, rasterized=True)
         
        
-        if coefficient == 'C_p':
-            ax.scatter(theta_opt, lambda_opt, color='r', s=80, marker='*',
-                   label='Maximum $C_p$ ')
+        if coefficient == 'C_P':
+            ax.scatter(theta_opt, lambda_opt, color='b', s=80, marker='*',
+                   label='Maximum $C_P$ ')
             ax.legend()
-        if coefficient == 'C_t':
-            ax.scatter(theta_opt, lambda_opt, color='b', s=80, marker='o',
-                   label='$C_t$ ')
+        if coefficient == 'C_T':
+            ax.scatter(theta_opt, lambda_opt, color='r', s=80, marker='o',
+                   label='$C_T$ ')
             ax.legend()
         ax.set_title(f'{method} Method - ${coefficient}(\\lambda, \\theta_p)$ Contour')
         ax.set_xlabel('Pitch Angle $\\theta_p$ [deg]')
@@ -96,8 +98,7 @@ for row, (method, cp_data, ct_data, theta_opt, lambda_opt) in enumerate([
 #all fonts and labels are set to size 12 for consistency   
 plt.rcParams.update({'font.size': 13})
 plt.tight_layout()
-if not os.path.exists('Figures'):
-    os.makedirs('Figures')
+
 fig.savefig(os.path.join(figures_path,'Cp_contour_comparison_raster.pdf'), dpi=300)
 
 

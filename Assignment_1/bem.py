@@ -170,8 +170,7 @@ def BEM_algorithm (s,theta_p,V_0,method = 'Polynomial',return_loads = False):
             omega = omega_max
     else:
             omega = s * V_0 / R
-    #print(f'For wind speed {V_0:.2f} m/s, the rotor speed is {omega:.4f} rad/s, with tip speed ratio {s:.2f} and pitch angle {theta_p:.2f} degrees.')
-    #Load blade data
+     #Load blade data
     r_list = blade_dat['r'].values
     chord_list = blade_dat['c'].values
     beta_list = blade_dat['beta'].values
@@ -289,9 +288,4 @@ def BEM_algorithm (s,theta_p,V_0,method = 'Polynomial',return_loads = False):
 
     return Cp,CT
 
-
-# lambda_i = 0.98 * R / 11.19
-# theta_f = solve_pitch(0.0, 40.0,lambda_i , 0.45)
-
-# print(f"Feather pitch angle for lambda_i = {lambda_i:.2f} and cp_target = 0.45 is {theta_f:.2f} degrees")
 
